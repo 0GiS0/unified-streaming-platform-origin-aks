@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: usp-origin
+spec:
+  selector:
+    matchLabels:
+      app: usp-origin
+  template:
+    metadata:
+      labels:
+        app: usp-origin
+    spec:
+      containers:
+        - name: usp-origin
+          image: 0gis0/usp-origin
+          imagePullPolicy: Always
+          env:
+            - name: USP_LICENSE_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: key
+                  name: usp-licence
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: assets
+              mountPath: /var/www/unified-origin
+      volumes:
+        - name: assets
+          azureFile:
+            shareName: assets
+            secretName: azure-secret
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: usp-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: usp-origin
+  ports:
+    - port: 80
+      targetPort: 80
